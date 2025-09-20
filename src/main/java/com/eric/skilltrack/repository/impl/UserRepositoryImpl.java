@@ -20,6 +20,7 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
 
     private static final String SHEET_NAME = "Usuarios";
 
+    // Colunas (atenção: dependem da ordem real da planilha)
     private static final String COL_LDAP = "LDAP";
     private static final String COL_DATA_CAD = "Data_Cadastro";
     private static final String COL_ROLE = "Role";
@@ -37,7 +38,10 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
     private static final String COL_GESTOR_3 = "Gestor_3";
     private static final String COL_ADMISSAO = "Admissão";
 
-    public UserRepositoryImpl(Sheets sheetsService, @Value("${GOOGLE_SPREADSHEET_ID}")String spreadsheetId) {
+    public UserRepositoryImpl(
+            Sheets sheetsService,
+            @Value("${GOOGLE_SPREADSHEET_ID}") String spreadsheetId
+    ) {
         super(sheetsService, spreadsheetId);
     }
 
@@ -46,12 +50,14 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
         return SHEET_NAME;
     }
 
+    /**
+     * Converte uma linha crua da planilha para um objeto User
+     */
     @Override
     protected User fromRow(List<Object> row) {
         List<String> cols = new ArrayList<>();
         for (int i = 0; i < 16; i++) {
-            if (i < row.size() && row.get(i) != null) cols.add(String.valueOf(row.get(i)));
-            else cols.add("");
+            cols.add(i < row.size() && row.get(i) != null ? String.valueOf(row.get(i)) : "");
         }
 
         User u = new User();
@@ -74,6 +80,9 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
         return u;
     }
 
+    /**
+     * Converte um User para uma linha da planilha
+     */
     @Override
     protected List<Object> toRow(User entity) {
         List<Object> row = new ArrayList<>();
@@ -98,6 +107,7 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
 
     @Override
     public Optional<User> findById(String id) throws IOException {
+        // findById é só um alias de findByLdap
         return findByLdap(id);
     }
 
@@ -124,15 +134,18 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
 
     @Override
     public User save(User entity) throws IOException {
+        // Não sobrescreve se já existir
         Optional<User> exists = findByLdap(entity.getLdap());
         if (exists.isPresent()) return exists.get();
 
+        // Defaults
         if (entity.getDataCadastro() == null || entity.getDataCadastro().isBlank()) {
             entity.setDataCadastro(LocalDate.now().toString());
         }
         if (entity.getRole() == null) {
             entity.setRole(UserRole.PARTICIPANT);
         }
+
         appendRow(toRow(entity));
         return entity;
     }
@@ -147,7 +160,9 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
 
     @Override
     public void deleteById(String id) throws IOException {
-        updateCell(findRowIndexByColumn(sheetName(), COL_LDAP, id), COL_STATUS, "INACTIVE");
+        int rowIndex = findRowIndexByColumn(sheetName(), COL_LDAP, id);
+        if (rowIndex == -1) throw new IllegalArgumentException("User not found: " + id);
+        updateCell(rowIndex, COL_STATUS, "INACTIVE");
     }
 
     @Override
@@ -159,6 +174,7 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
         u.setLdap(ldap);
         u.setDataCadastro(LocalDate.now().toString());
         u.setRole(UserRole.PARTICIPANT);
+
         appendRow(toRow(u));
         return u;
     }
@@ -174,9 +190,8 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
     public void syncFromHc(HcRepository hcRepository) throws IOException {
         List<User> users = findAllUsers();
         for (User u : users) {
-            var opt = hcRepository.findByLdap(u.getLdap());
-            if (opt.isPresent()) {
-                var h = opt.get();
+            hcRepository.findByLdap(u.getLdap()).ifPresent(h -> {
+                // Atualiza dados dinâmicos vindos da aba HC
                 u.setNome(h.getNome());
                 u.setCargo(h.getCargo());
                 u.setEscala(h.getEscala());
@@ -189,8 +204,13 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
                 u.setGestor2(h.getGestao2());
                 u.setGestor3(h.getGestao3());
                 u.setAdmissao(h.getAdmissao());
-                update(u);
-            }
+
+                try {
+                    update(u); // só atualiza se realmente existir no HC
+                } catch (IOException e) {
+                    throw new RuntimeException("Erro ao atualizar usuário: " + u.getLdap(), e);
+                }
+            });
         }
     }
 }
