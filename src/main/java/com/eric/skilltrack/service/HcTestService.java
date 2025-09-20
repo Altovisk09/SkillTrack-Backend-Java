@@ -18,7 +18,7 @@ public class HcTestService {
 
     /**
      * Testa a conexão com a planilha, buscando o LDAP e retornando
-     * índice da linha se encontrado ou -1 se não existir.
+     *  índice da linha se encontrado ou -1 se não existir.
      */
     public String testConnection(String ldap) {
         try {

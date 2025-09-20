@@ -4,6 +4,7 @@ import com.eric.skilltrack.model.HC;
 import com.eric.skilltrack.repository.HcRepository;
 import com.eric.skilltrack.repository.GenericRepository; // <<--- Import correto
 import com.google.api.services.sheets.v4.Sheets;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
@@ -16,8 +17,8 @@ public class HcRepositoryImpl extends GenericRepository<HC> implements HcReposit
 
     private static final String SHEET_NAME = "HC";
 
-    public HcRepositoryImpl(Sheets sheetsService, String spreadsheetId) {
-        super(sheetsService, spreadsheetId); // chama construtor da base
+    public HcRepositoryImpl(Sheets sheetsService, @Value("${GOOGLE_SPREADSHEET_ID}") String spreadsheetId) {
+        super(sheetsService, spreadsheetId);
     }
 
     @Override

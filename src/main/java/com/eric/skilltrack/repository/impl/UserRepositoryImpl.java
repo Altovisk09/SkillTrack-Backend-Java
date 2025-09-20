@@ -5,6 +5,8 @@ import com.eric.skilltrack.model.enums.UserRole;
 import com.eric.skilltrack.repository.GenericRepository;
 import com.eric.skilltrack.repository.HcRepository;
 import com.eric.skilltrack.repository.UserRepository;
+import com.google.api.services.sheets.v4.Sheets;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
@@ -35,7 +37,7 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
     private static final String COL_GESTOR_3 = "Gestor_3";
     private static final String COL_ADMISSAO = "Admissão";
 
-    public UserRepositoryImpl(com.google.api.services.sheets.v4.Sheets sheetsService, String spreadsheetId) {
+    public UserRepositoryImpl(Sheets sheetsService, @Value("${GOOGLE_SPREADSHEET_ID}")String spreadsheetId) {
         super(sheetsService, spreadsheetId);
     }
 
