@@ -1,12 +1,13 @@
 package com.eric.skilltrack.model;
 
+import com.eric.skilltrack.model.enums.UserRole;
 import lombok.Data;
 
 @Data
 public class User {
     private String ldap;
     private String dataCadastro;
-    private String role;
+    private UserRole role;
     private String ultimaSessao;
     private String nome;
     private String cargo;
