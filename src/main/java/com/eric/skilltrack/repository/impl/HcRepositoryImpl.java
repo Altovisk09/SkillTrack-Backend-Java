@@ -1,6 +1,7 @@
 package com.eric.skilltrack.repository.impl;
 
 import com.eric.skilltrack.model.HC;
+import com.eric.skilltrack.model.Onboarding;
 import com.eric.skilltrack.repository.HcRepository;
 import com.eric.skilltrack.repository.GenericRepository; // <<--- Import correto
 import com.google.api.services.sheets.v4.Sheets;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -88,6 +90,11 @@ public class HcRepositoryImpl extends GenericRepository<HC> implements HcReposit
     @Override
     public List<HC> findAll() throws IOException {
         return findAllHC();
+    }
+
+    @Override
+    protected Map<String, Object> toRowMap(Onboarding entity) {
+        return Map.of();
     }
 
     @Override

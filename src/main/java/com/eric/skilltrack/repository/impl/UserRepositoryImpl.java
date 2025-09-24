@@ -1,5 +1,6 @@
 package com.eric.skilltrack.repository.impl;
 
+import com.eric.skilltrack.model.Onboarding;
 import com.eric.skilltrack.model.User;
 import com.eric.skilltrack.model.enums.UserRole;
 import com.eric.skilltrack.repository.GenericRepository;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Repository
@@ -122,6 +124,11 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
     @Override
     public List<User> findAll() throws IOException {
         return findAllUsers();
+    }
+
+    @Override
+    protected Map<String, Object> toRowMap(Onboarding entity) {
+        return Map.of();
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.eric.skilltrack.repository;
 
+import com.eric.skilltrack.model.Onboarding;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
@@ -9,12 +10,6 @@ import java.util.*;
 /**
  * Classe abstrata que implementa a interface BaseRepository,
  * fornecendo helpers prontos para ler/escrever dados no Google Sheets.
- *
- * Os repositórios concretos (UserRepository, QuizRepository, etc.)
- * devem herdar desta classe e implementar:
- * - sheetName() -> nome da aba
- * - fromRow(List<Object>) -> converte linha para objeto T
- * - toRow(T entity) -> converte objeto T em lista de colunas
  */
 public abstract class GenericRepository<T> implements BaseRepository<T, String> {
 
@@ -29,10 +24,6 @@ public abstract class GenericRepository<T> implements BaseRepository<T, String> 
         this.spreadsheetId = spreadsheetId;
     }
 
-    // -----------------------------------
-    // Métodos que o filho deve implementar
-    // -----------------------------------
-
     /** Nome da aba no Sheets (ex.: "Usuarios"). */
     protected abstract String sheetName();
 
@@ -42,9 +33,7 @@ public abstract class GenericRepository<T> implements BaseRepository<T, String> 
     /** Converte um objeto T em lista de colunas. */
     protected abstract List<Object> toRow(T entity);
 
-    // -----------------------------------
     // Helpers reutilizáveis
-    // -----------------------------------
 
     /** Lê um intervalo qualquer e retorna a matriz de valores. */
     protected List<List<Object>> readRange(String range) throws IOException {
@@ -168,9 +157,7 @@ public abstract class GenericRepository<T> implements BaseRepository<T, String> 
         return sb.toString();
     }
 
-    // -----------------------------------
     // Implementações genéricas de CRUD
-    // -----------------------------------
 
     @Override
     public List<T> findAll() throws IOException {
@@ -182,8 +169,8 @@ public abstract class GenericRepository<T> implements BaseRepository<T, String> 
         return out;
     }
 
-    // findById / save / update / deleteById ficam abstratos
-    // pois dependem de cada tipo de entidade (colunas diferentes)
+    protected abstract Map<String, Object> toRowMap(Onboarding entity);
+
     @Override
     public abstract Optional<T> findById(String id) throws IOException;
 
