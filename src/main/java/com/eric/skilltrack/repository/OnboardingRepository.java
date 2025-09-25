@@ -3,6 +3,7 @@ package com.eric.skilltrack.repository;
 import com.eric.skilltrack.model.Onboarding;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,4 +25,10 @@ public interface OnboardingRepository extends BaseRepository<Onboarding, String>
 
     @Override
     int findRowIndexByColumn(String sheetName, String columnName, String value) throws IOException;
+
+    Onboarding createTurma(String IdMultiplicador,
+                           String IdMultiplicadorReserva,
+                           LocalDate dataFinal) throws IOException;
+
+    void setMultiplicadorReserva(String idTurma, String idMultiplicadorReserva) throws IOException;
 }

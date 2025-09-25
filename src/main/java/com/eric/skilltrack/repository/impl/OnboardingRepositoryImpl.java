@@ -1,4 +1,3 @@
-// OnboardingRepositoryImpl.java
 package com.eric.skilltrack.repository.impl;
 
 import com.eric.skilltrack.model.Onboarding;
@@ -37,10 +36,8 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
 
     @Override
     protected Onboarding fromRow(List<Object> row) {
-        // Garante 7 colunas
         List<String> c = new ArrayList<>();
         for (int i = 0; i < 7; i++) c.add(i < row.size() && row.get(i) != null ? String.valueOf(row.get(i)) : "");
-
         Onboarding o = new Onboarding();
         o.setIdTurma(c.get(0));
         o.setTurno(c.get(1));
@@ -66,80 +63,25 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
     protected Map<String, Object> toRowMap(Onboarding e) {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put(COL_ID_TURMA,   e.getIdTurma());
-        map.put(COL_TURNO,      e.getTurno()); // pode ser fórmula (Strings de fórmula tbm são USER_ENTERED)
+        map.put(COL_TURNO,      e.getTurno());
         map.put(COL_ID_MULT,    e.getIdMultiplicador());
         map.put(COL_ID_MULTRES, e.getIdMultiplicadorReserva());
         map.put(COL_DATA_INI,   e.getDataInicio());
-        map.put(COL_DATA_FIM,   e.getDataFim());   // pode ser fórmula
-        map.put(COL_STATUS,     e.getStatus());    // pode ser fórmula
+        map.put(COL_DATA_FIM,   e.getDataFim());
+        map.put(COL_STATUS,     e.getStatus());
         return map;
     }
 
-    /* ======= API de criação de turma ======= */
-
-    /** Cria uma turma e atrela ao multiplicador. Reserva é opcional (pode ser null/blank). */
-    public Onboarding createTurma(String idMultiplicador, String idMultiplicadorReserva, LocalDate dataInicio)
-            throws IOException {
-
-        // 1) valida Data_Início ≥ hoje
-        LocalDate hoje = LocalDate.now();
-        if (dataInicio.isBefore(hoje)) dataInicio = hoje;
-
-        // 2) gera ID_Turma
-        String idTurma = generateTurmaId();
-
-        // 3) fórmulas dependentes da LIN() (independem de qual linha a planilha vai usar)
-        String fTurno =
-                "=SEERRO(" +
-                        "  ÍNDICE(Multiplicadores_Controle_Geral!$B:$B;" +
-                        "         CORRESP(ÍNDICE($C:$C; LIN()); Multiplicadores_Controle_Geral!$A:$A; 0)" +
-                        "  ); \"\"" +
-                        ")";
-
-        String fDataFim =
-                "=SE(ÍNDICE($E:$E; LIN())=\"\"; \"\"; ÍNDICE($E:$E; LIN()) + 5)";
-
-        String fStatus =
-                "=SE(" +
-                        "  ÍNDICE($E:$E; LIN())=\"\";" +
-                        "  \"\";" +
-                        "  SE(ÍNDICE($F:$F; LIN()) < HOJE(); \"Concluído\"; \"Em andamento\")" +
-                        ")";
-        String dataInicioBr = dataInicio.format(BR);
-
-        Map<String, Object> rowMap = new LinkedHashMap<>();
-        rowMap.put(COL_ID_TURMA,   idTurma);                 // valor
-        rowMap.put(COL_TURNO,      fTurno);                  // FÓRMULA
-        rowMap.put(COL_ID_MULT,    idMultiplicador);         // valor
-        rowMap.put(COL_ID_MULTRES, Optional.ofNullable(idMultiplicadorReserva).orElse("")); // valor (pode ser "")
-        rowMap.put(COL_DATA_INI,   dataInicioBr);            // valor (já validado >= hoje)
-        rowMap.put(COL_DATA_FIM,   fDataFim);                // FÓRMULA
-        rowMap.put(COL_STATUS,     fStatus);                 // FÓRMULA
-
-        List<Object> row = buildRowFromMap(sheetName(), rowMap);
-        // última coluna é G
-        appendRowUserEntered(row, "G");
-
-        // 5) retorno do objeto
-        Onboarding o = new Onboarding();
-        o.setIdTurma(idTurma);
-        o.setIdMultiplicador(idMultiplicador);
-        o.setIdMultiplicadorReserva(Optional.ofNullable(idMultiplicadorReserva).orElse(""));
-        o.setTurno(""); // será calculado pela planilha
-        o.setDataInicio(dataInicioBr);
-        o.setDataFim(""); // será calculado
-        o.setStatus("");  // será calculado
-        return o;
-    }
 
     /** Atualiza/define o multiplicador reserva (coluna D). */
+    @Override
     public void setMultiplicadorReserva(String idTurma, String idMultiplicadorReserva) throws IOException {
         int rowIndex = findRowIndexByColumn(sheetName(), COL_ID_TURMA, idTurma);
         if (rowIndex == -1) throw new IllegalArgumentException("Turma não encontrada: " + idTurma);
         updateCell(rowIndex, COL_ID_MULTRES, Optional.ofNullable(idMultiplicadorReserva).orElse(""));
     }
 
-    /* ======= CRUD (caso queira usar também) ======= */
+    /* ======= CRUD ======= */
 
     @Override
     public Optional<Onboarding> findById(String id) throws IOException {
@@ -175,12 +117,64 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
     public void deleteById(String id) throws IOException {
         int rowIndex = findRowIndexByColumn(sheetName(), COL_ID_TURMA, id);
         if (rowIndex != -1) {
-            updateCell(rowIndex, COL_STATUS, "Concluído"); // ou "Cancelada", conforme sua regra
+            updateCell(rowIndex, COL_STATUS, "Concluído"); // ou "Cancelada", se preferir
         }
     }
 
-    /* ======= helpers ======= */
+    /* ======= createTurma (public, casa com a interface) ======= */
+    @Override
+    public Onboarding createTurma(String IdMultiplicador, String IdMultiplicadorReserva, LocalDate dataFinal) throws IOException {
+        // valida Data_Início ≥ hoje (dataFinal aqui é a data de INÍCIO)
+        LocalDate hoje = LocalDate.now();
+        if (dataFinal.isBefore(hoje)) dataFinal = hoje;
 
+        String idTurma = generateTurmaId();
+        String dataInicioBr = dataFinal.format(BR);
+
+        // B: Turno buscado do MCG pelo ID do multiplicador (C)
+        String fTurno =
+                "=SEERRO(" +
+                        "  ÍNDICE(Multiplicadores_Controle_Geral!$B:$B;" +
+                        "         CORRESP(ÍNDICE($C:$C; LIN()); Multiplicadores_Controle_Geral!$A:$A; 0)" +
+                        "  ); \"\"" +
+                        ")";
+
+        // F: Data_Fim = E + 5
+        String fDataFim =
+                "=SE(ÍNDICE($E:$E; LIN())=\"\"; \"\"; ÍNDICE($E:$E; LIN()) + 5)";
+
+        // G: Status (até data fim → Em andamento; depois → Concluído)
+        String fStatus =
+                "=SE(" +
+                        "  ÍNDICE($E:$E; LIN())=\"\";" +
+                        "  \"\";" +
+                        "  SE(ÍNDICE($F:$F; LIN()) < HOJE(); \"Concluído\"; \"Em andamento\")" +
+                        ")";
+
+        Map<String, Object> rowMap = new LinkedHashMap<>();
+        rowMap.put(COL_ID_TURMA,   idTurma);
+        rowMap.put(COL_TURNO,      fTurno); // fórmula
+        rowMap.put(COL_ID_MULT,    IdMultiplicador);
+        rowMap.put(COL_ID_MULTRES, Optional.ofNullable(IdMultiplicadorReserva).orElse(""));
+        rowMap.put(COL_DATA_INI,   dataInicioBr);
+        rowMap.put(COL_DATA_FIM,   fDataFim); // fórmula
+        rowMap.put(COL_STATUS,     fStatus);  // fórmula
+
+        List<Object> row = buildRowFromMap(sheetName(), rowMap);
+        appendRowUserEntered(row, "G");
+
+        Onboarding o = new Onboarding();
+        o.setIdTurma(idTurma);
+        o.setIdMultiplicador(IdMultiplicador);
+        o.setIdMultiplicadorReserva(Optional.ofNullable(IdMultiplicadorReserva).orElse(""));
+        o.setTurno("");        // calculado pela planilha
+        o.setDataInicio(dataInicioBr);
+        o.setDataFim("");      // calculado
+        o.setStatus("");       // calculado
+        return o;
+    }
+
+    /* ======= helpers ======= */
     private String generateTurmaId() {
         String hex = UUID.randomUUID().toString().replace("-", "");
         return "TRM-" + hex.substring(0, 6).toUpperCase();

@@ -1,0 +1,34 @@
+// dto/hc/HcResponse.java
+package com.eric.skilltrack.dto.hc;
+
+public record HcResponse(
+        String nome,
+        String matricula,
+        String cargo,
+        String escala,
+        String turnoRes,
+        String turma,
+        String escalaTurnoTurma,
+        String turnoTurma,
+        String status,
+        String empresa,
+        String atividade,
+        String areaSOP,
+        String processo,
+        String diretoIndireto,
+        String gestorImediato,
+        String gestao2,
+        String gestao3,
+        String admissao,
+        String criterios,
+        String ldap,
+        String idGroot,
+        String idLenel,
+        String feriasInicio,
+        String feriasFim,
+        String fimContrato,
+        String dataLimite,
+        String dataNascimento,
+        String fretado,
+        String admissaoOriginal
+) {}
