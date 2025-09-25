@@ -16,6 +16,6 @@ public interface UserRepository extends BaseRepository<User, String> {
 
     void updateLastSession(String ldap, String lastSession) throws IOException;
 
-    // Se for usar HC (Human Capital), mantemos esse método
+    // Se for usar HC (Human Capital), mantemos esse metodo
     void syncFromHc(HcRepository hcRepository) throws IOException;
 }
