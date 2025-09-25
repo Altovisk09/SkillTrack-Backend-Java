@@ -236,7 +236,7 @@ public class McgRepositoryImpl extends GenericRepository<GeneralControlMultiplie
     }
 
     @Override
-    protected Map<String, Object> toRowMap(Onboarding entity) {
+    protected Map<String, Object> toRowMap(GeneralControlMultipliers entity) {
         return Map.of();
     }
 

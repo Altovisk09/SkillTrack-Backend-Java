@@ -1,6 +1,5 @@
 package com.eric.skilltrack.repository.impl;
 
-import com.eric.skilltrack.model.Onboarding;
 import com.eric.skilltrack.model.User;
 import com.eric.skilltrack.model.enums.UserRole;
 import com.eric.skilltrack.repository.GenericRepository;
@@ -127,8 +126,26 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
     }
 
     @Override
-    protected Map<String, Object> toRowMap(Onboarding entity) {
-        return Map.of();
+    protected Map<String, Object> toRowMap(User e) {
+        // Monte o mapa usando os NOMES EXATOS dos cabeçalhos da aba "Usuarios"
+        Map<String, Object> map = new java.util.LinkedHashMap<>();
+        map.put(COL_LDAP,            e.getLdap());
+        map.put(COL_DATA_CAD,        e.getDataCadastro());
+        map.put(COL_ROLE,            e.getRole() != null ? e.getRole().name() : UserRole.PARTICIPANT.name());
+        map.put(COL_ULTIMA_SESSAO,   e.getUltimaSessao());
+        map.put(COL_NOME,            e.getNome());
+        map.put(COL_CARGO,           e.getCargo());
+        map.put(COL_ESCALA,          e.getEscala());
+        map.put(COL_TURNO,           e.getTurno());
+        map.put(COL_STATUS,          e.getStatus());
+        map.put(COL_EMPRESA,         e.getEmpresa());
+        map.put(COL_AREA,            e.getArea());
+        map.put(COL_PROCESSO,        e.getProcesso());
+        map.put(COL_GESTOR_IMEDIATO, e.getGestorImediato());
+        map.put(COL_GESTOR_2,        e.getGestor2());
+        map.put(COL_GESTOR_3,        e.getGestor3());
+        map.put(COL_ADMISSAO,        e.getAdmissao());
+        return map;
     }
 
     @Override

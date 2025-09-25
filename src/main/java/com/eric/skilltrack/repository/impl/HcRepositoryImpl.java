@@ -1,7 +1,6 @@
 package com.eric.skilltrack.repository.impl;
 
 import com.eric.skilltrack.model.HC;
-import com.eric.skilltrack.model.Onboarding;
 import com.eric.skilltrack.repository.HcRepository;
 import com.eric.skilltrack.repository.GenericRepository; // <<--- Import correto
 import com.google.api.services.sheets.v4.Sheets;
@@ -93,7 +92,7 @@ public class HcRepositoryImpl extends GenericRepository<HC> implements HcReposit
     }
 
     @Override
-    protected Map<String, Object> toRowMap(Onboarding entity) {
+    protected Map<String, Object> toRowMap(HC entity) {
         return Map.of();
     }
 
