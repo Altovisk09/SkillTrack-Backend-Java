@@ -24,12 +24,11 @@ public abstract class GenericRepository<T> implements BaseRepository<T, String> 
     }
 
     /** Nome da aba no Sheets (ex.: "Usuarios"). */
-    protected abstract String sheetName();
+    protected abstract String getSheetName();
 
     /** Converte uma linha em um objeto T. */
     protected abstract T fromRow(List<Object> row);
 
-    protected abstract String getSheetName();
 
     /** Converte um objeto T em lista de colunas. */
     protected abstract List<Object> toRow(T entity);
@@ -55,7 +54,7 @@ public abstract class GenericRepository<T> implements BaseRepository<T, String> 
     protected void appendRow(List<Object> row) throws IOException {
         ValueRange body = new ValueRange().setValues(Collections.singletonList(row));
         sheetsService.spreadsheets().values()
-                .append(spreadsheetId, sheetName() + "!A:Z", body)
+                .append(spreadsheetId, getSheetName() + "!A:Z", body)
                 .setValueInputOption("RAW")
                 .setInsertDataOption("INSERT_ROWS")
                 .execute();
@@ -64,7 +63,7 @@ public abstract class GenericRepository<T> implements BaseRepository<T, String> 
     /** Atualiza uma linha inteira (sobrescreve). */
     protected void updateRow(int sheetRowIndex, List<Object> row) throws IOException {
         String lastCol = columnToLetter(Math.max(1, row.size()));
-        String range = String.format("%s!A%d:%s%d", sheetName(), sheetRowIndex, lastCol, sheetRowIndex);
+        String range = String.format("%s!A%d:%s%d", getSheetName(), sheetRowIndex, lastCol, sheetRowIndex);
         ValueRange body = new ValueRange().setValues(Collections.singletonList(row));
         sheetsService.spreadsheets().values()
                 .update(spreadsheetId, range, body)
@@ -74,12 +73,12 @@ public abstract class GenericRepository<T> implements BaseRepository<T, String> 
 
     /** Atualiza apenas uma célula (coluna + linha). */
     protected void updateCell(int sheetRowIndex, String columnName, Object value) throws IOException {
-        Map<String, Integer> header = loadHeaderIfNeeded(sheetName());
+        Map<String, Integer> header = loadHeaderIfNeeded(getSheetName());
         Integer colIdx = header.get(columnName);
         if (colIdx == null) throw new IllegalArgumentException("Coluna não encontrada: " + columnName);
 
         String colLetter = columnToLetter(colIdx + 1); // colIdx é zero-based
-        String range = String.format("%s!%s%d", sheetName(), colLetter, sheetRowIndex);
+        String range = String.format("%s!%s%d", getSheetName(), colLetter, sheetRowIndex);
 
         ValueRange body = new ValueRange().setValues(Collections.singletonList(Collections.singletonList(value)));
         sheetsService.spreadsheets().values()
@@ -90,12 +89,12 @@ public abstract class GenericRepository<T> implements BaseRepository<T, String> 
 
     /** Lê todos os dados da aba (a partir da linha 2). */
     protected List<List<Object>> readAllData() throws IOException {
-        return readRange(sheetName() + "!A2:Z");
+        return readRange(getSheetName() + "!A2:Z");
     }
 
     /** Busca uma linha específica e retorna os valores. */
     protected List<Object> getRowValues(int sheetRowIndex) throws IOException {
-        String range = String.format("%s!A%d:Z%d", sheetName(), sheetRowIndex, sheetRowIndex);
+        String range = String.format("%s!A%d:Z%d", getSheetName(), sheetRowIndex, sheetRowIndex);
         List<List<Object>> rows = readRange(range);
         return rows.isEmpty() ? Collections.emptyList() : rows.get(0);
     }
@@ -187,7 +186,7 @@ public abstract class GenericRepository<T> implements BaseRepository<T, String> 
     protected void appendRowUserEntered(List<Object> row, String lastCol) throws IOException {
         ValueRange body = new ValueRange().setValues(Collections.singletonList(row));
         sheetsService.spreadsheets().values()
-                .append(spreadsheetId, sheetName() + "!A:" + lastCol, body)
+                .append(spreadsheetId, getSheetName() + "!A:" + lastCol, body)
                 .setValueInputOption("USER_ENTERED")
                 .setInsertDataOption("INSERT_ROWS")
                 .execute();

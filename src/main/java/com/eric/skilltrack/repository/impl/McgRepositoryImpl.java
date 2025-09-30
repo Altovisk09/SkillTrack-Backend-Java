@@ -41,7 +41,7 @@ public class McgRepositoryImpl extends GenericRepository<GeneralControlMultiplie
     }
 
     @Override
-    protected String sheetName() {
+    protected String getSheetName() {
         return SHEET_NAME;
     }
 
@@ -65,10 +65,6 @@ public class McgRepositoryImpl extends GenericRepository<GeneralControlMultiplie
         return g;
     }
 
-    @Override
-    protected String getSheetName() {
-        return SHEET_NAME;
-    }
 
     @Override
     protected List<Object> toRow(GeneralControlMultipliers e) {
@@ -90,7 +86,7 @@ public class McgRepositoryImpl extends GenericRepository<GeneralControlMultiplie
     /** Verifica existência por LDAP (coluna C). */
     @Override
     public boolean existsByLdap(String ldap) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_LDAP, ldap);
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_LDAP, ldap);
         return rowIndex != -1;
     }
 
@@ -227,7 +223,7 @@ public class McgRepositoryImpl extends GenericRepository<GeneralControlMultiplie
 
     @Override
     public Optional<GeneralControlMultipliers> findById(String idMultiplicador) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_ID_MULT, idMultiplicador);
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_ID_MULT, idMultiplicador);
         if (rowIndex == -1) return Optional.empty();
         return Optional.of(fromRow(getRowValues(rowIndex)));
     }
@@ -253,7 +249,7 @@ public class McgRepositoryImpl extends GenericRepository<GeneralControlMultiplie
 
     @Override
     public GeneralControlMultipliers update(GeneralControlMultipliers entity) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_ID_MULT, entity.getIdMultiplicador());
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_ID_MULT, entity.getIdMultiplicador());
         if (rowIndex == -1) throw new IllegalArgumentException("Multiplicador não encontrado: " + entity.getIdMultiplicador());
         updateRow(rowIndex, toRow(entity));
         return entity;
@@ -261,7 +257,7 @@ public class McgRepositoryImpl extends GenericRepository<GeneralControlMultiplie
 
     @Override
     public void deleteById(String id) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_ID_MULT, id);
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_ID_MULT, id);
         if (rowIndex != -1) {
             updateCell(rowIndex, COL_STATUS_AT, "Removido");
         }

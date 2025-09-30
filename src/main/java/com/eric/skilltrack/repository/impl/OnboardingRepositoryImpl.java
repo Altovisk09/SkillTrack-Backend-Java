@@ -33,7 +33,7 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
         super(sheetsService, spreadsheetId);
     }
 
-    @Override protected String sheetName() { return SHEET_NAME; }
+    @Override protected String getSheetName() { return SHEET_NAME; }
 
     @Override
     protected Onboarding fromRow(List<Object> row) {
@@ -52,10 +52,6 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
         return o;
     }
 
-    @Override
-    protected String getSheetName() {
-        return "";
-    }
 
     private TrainingType parseTipoSafe(String v) {
         if (v == null || v.isBlank()) return TrainingType.ONBOARDING;
@@ -67,7 +63,7 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
     protected List<Object> toRow(Onboarding e) {
         Map<String, Object> map = toRowMap(e);
         try {
-            return buildRowFromMap(sheetName(), map);
+            return buildRowFromMap(getSheetName(), map);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -90,7 +86,7 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
 
     @Override
     public Optional<Onboarding> findById(String id) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_ID_TURMA, id);
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_ID_TURMA, id);
         if (rowIndex == -1) return Optional.empty();
         return Optional.of(fromRow(getRowValues(rowIndex)));
     }
@@ -112,7 +108,7 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
 
     @Override
     public Onboarding update(Onboarding entity) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_ID_TURMA, entity.getIdTurma());
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_ID_TURMA, entity.getIdTurma());
         if (rowIndex == -1) throw new IllegalArgumentException("Turma não encontrada: " + entity.getIdTurma());
         updateRow(rowIndex, toRow(entity));
         return entity;
@@ -120,7 +116,7 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
 
     @Override
     public void deleteById(String id) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_ID_TURMA, id);
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_ID_TURMA, id);
         if (rowIndex != -1) {
             updateCell(rowIndex, COL_STATUS, "Concluído"); // ou "Cancelada"
         }
@@ -164,7 +160,7 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
         rowMap.put(COL_STATUS,   fStatus);                 // fórmula
         rowMap.put(COL_TIPO,     (tipo == null ? TrainingType.ONBOARDING : tipo).name());
 
-        List<Object> row = buildRowFromMap(sheetName(), rowMap);
+        List<Object> row = buildRowFromMap(getSheetName(), rowMap);
         appendRowUserEntered(row, "G");
 
         Onboarding o = new Onboarding();

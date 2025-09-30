@@ -47,7 +47,7 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
     }
 
     @Override
-    protected String sheetName() {
+    protected String getSheetName() {
         return SHEET_NAME;
     }
 
@@ -81,10 +81,6 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
         return u;
     }
 
-    @Override
-    protected String getSheetName() {
-        return SHEET_NAME;
-    }
 
     /**
      * Converte um User para uma linha da planilha
@@ -119,7 +115,7 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
 
     @Override
     public Optional<User> findByLdap(String ldap) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_LDAP, ldap);
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_LDAP, ldap);
         if (rowIndex == -1) return Optional.empty();
         List<Object> row = getRowValues(rowIndex);
         return Optional.of(fromRow(row));
@@ -181,7 +177,7 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
 
     @Override
     public User update(User entity) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_LDAP, entity.getLdap());
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_LDAP, entity.getLdap());
         if (rowIndex == -1) throw new IllegalArgumentException("User not found: " + entity.getLdap());
         updateRow(rowIndex, toRow(entity));
         return entity;
@@ -189,7 +185,7 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
 
     @Override
     public void deleteById(String id) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_LDAP, id);
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_LDAP, id);
         if (rowIndex == -1) throw new IllegalArgumentException("User not found: " + id);
         updateCell(rowIndex, COL_STATUS, "INACTIVE");
     }
@@ -210,7 +206,7 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
 
     @Override
     public void updateLastSession(String ldap, String lastSession) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_LDAP, ldap);
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_LDAP, ldap);
         if (rowIndex == -1) throw new IllegalArgumentException("User not found: " + ldap);
         updateCell(rowIndex, COL_ULTIMA_SESSAO, lastSession);
     }

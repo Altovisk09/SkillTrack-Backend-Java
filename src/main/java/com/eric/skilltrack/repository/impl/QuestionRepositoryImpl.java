@@ -31,7 +31,7 @@ public class QuestionRepositoryImpl extends GenericRepository<Question> implemen
     }
 
     @Override
-    protected String sheetName() {
+    protected String getSheetName() {
         return SHEET_NAME;
     }
 
@@ -61,14 +61,9 @@ public class QuestionRepositoryImpl extends GenericRepository<Question> implemen
     }
 
     @Override
-    protected String getSheetName() {
-        return SHEET_NAME;
-    }
-
-    @Override
     protected List<Object> toRow(Question e) {
         try {
-            return buildRowFromMap(sheetName(), toRowMap(e));
+            return buildRowFromMap(getSheetName(), toRowMap(e));
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
@@ -94,7 +89,7 @@ public class QuestionRepositoryImpl extends GenericRepository<Question> implemen
 
     @Override
     public Optional<Question> findById(String id) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_ID, id);
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_ID, id);
         if (rowIndex == -1) return Optional.empty();
         return Optional.of(fromRow(getRowValues(rowIndex)));
     }
@@ -116,7 +111,7 @@ public class QuestionRepositoryImpl extends GenericRepository<Question> implemen
 
     @Override
     public Question update(Question entity) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_ID, entity.getIdPergunta());
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_ID, entity.getIdPergunta());
         if (rowIndex == -1) throw new IllegalArgumentException("Pergunta não encontrada: " + entity.getIdPergunta());
         updateRow(rowIndex, toRow(entity));
         return entity;
@@ -124,7 +119,7 @@ public class QuestionRepositoryImpl extends GenericRepository<Question> implemen
 
     @Override
     public void deleteById(String id) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_ID, id);
+        int rowIndex = findRowIndexByColumn(getSheetName(), COL_ID, id);
         if (rowIndex != -1) {
             updateCell(rowIndex, COL_CORRETA, "DELETADA"); // marca como deletada
         }

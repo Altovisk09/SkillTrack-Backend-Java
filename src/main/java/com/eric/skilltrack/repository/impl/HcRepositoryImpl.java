@@ -23,11 +23,6 @@ public class HcRepositoryImpl extends GenericRepository<HC> implements HcReposit
     }
 
     @Override
-    protected String sheetName() {
-        return SHEET_NAME;
-    }
-
-    @Override
     protected HC fromRow(List<Object> row) {
         List<String> cols = new ArrayList<>();
         for (int i = 0; i < 30; i++) { // ajuste conforme colunas reais
@@ -85,7 +80,7 @@ public class HcRepositoryImpl extends GenericRepository<HC> implements HcReposit
 
     @Override
     public Optional<HC> findByLdap(String ldap) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), "LDAP", ldap); // já vem do GenericRepository
+        int rowIndex = findRowIndexByColumn(getSheetName(), "LDAP", ldap); // já vem do GenericRepository
         if (rowIndex == -1) return Optional.empty();
         List<Object> row = getRowValues(rowIndex);
         return Optional.of(fromRow(row));
