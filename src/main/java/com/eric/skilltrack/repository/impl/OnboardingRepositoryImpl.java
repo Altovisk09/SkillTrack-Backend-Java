@@ -1,6 +1,7 @@
 package com.eric.skilltrack.repository.impl;
 
 import com.eric.skilltrack.model.Onboarding;
+import com.eric.skilltrack.model.enums.TrainingType;
 import com.eric.skilltrack.repository.OnboardingRepository;
 import com.eric.skilltrack.repository.GenericRepository;
 import com.google.api.services.sheets.v4.Sheets;
@@ -17,14 +18,14 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
 
     private static final String SHEET_NAME = "Turmas";
 
-    // Cabeçalhos
-    private static final String COL_ID_TURMA   = "ID_Turma";                 // A
-    private static final String COL_TURNO      = "Turno";                    // B (FÓRMULA)
-    private static final String COL_ID_MULT    = "ID_Multiplicador";         // C
-    private static final String COL_ID_MULTRES = "ID_Multiplicador_Reserva"; // D
-    private static final String COL_DATA_INI   = "Data_Início";              // E (VALOR)
-    private static final String COL_DATA_FIM   = "Data_Fim";                 // F (FÓRMULA)
-    private static final String COL_STATUS     = "Status";                   // G (FÓRMULA)
+    // Cabeçalhos (ajustados)
+    private static final String COL_ID_TURMA = "ID_Turma";     // A
+    private static final String COL_TURNO    = "Turno";        // B (FÓRMULA)
+    private static final String COL_ID_MULT  = "ID_Multiplicador"; // C
+    private static final String COL_DATA_INI = "Data_Início";  // D (VALOR)
+    private static final String COL_DATA_FIM = "Data_Fim";     // E (FÓRMULA)
+    private static final String COL_STATUS   = "Status";       // F (FÓRMULA)
+    private static final String COL_TIPO     = "Tipo";         // G (VALOR)
 
     private static final DateTimeFormatter BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
@@ -36,17 +37,30 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
 
     @Override
     protected Onboarding fromRow(List<Object> row) {
+        // agora são 7 colunas
         List<String> c = new ArrayList<>();
         for (int i = 0; i < 7; i++) c.add(i < row.size() && row.get(i) != null ? String.valueOf(row.get(i)) : "");
+
         Onboarding o = new Onboarding();
         o.setIdTurma(c.get(0));
         o.setTurno(c.get(1));
         o.setIdMultiplicador(c.get(2));
-        o.setIdMultiplicadorReserva(c.get(3));
-        o.setDataInicio(c.get(4));
-        o.setDataFim(c.get(5));
-        o.setStatus(c.get(6));
+        o.setDataInicio(c.get(3));
+        o.setDataFim(c.get(4));
+        o.setStatus(c.get(5));
+        o.setTipo(parseTipoSafe(c.get(6)));
         return o;
+    }
+
+    @Override
+    protected String getSheetName() {
+        return "";
+    }
+
+    private TrainingType parseTipoSafe(String v) {
+        if (v == null || v.isBlank()) return TrainingType.ONBOARDING;
+        try { return TrainingType.valueOf(v.trim().toUpperCase()); }
+        catch (IllegalArgumentException ex) { return TrainingType.ONBOARDING; }
     }
 
     @Override
@@ -62,23 +76,14 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
     @Override
     protected Map<String, Object> toRowMap(Onboarding e) {
         Map<String, Object> map = new LinkedHashMap<>();
-        map.put(COL_ID_TURMA,   e.getIdTurma());
-        map.put(COL_TURNO,      e.getTurno());
-        map.put(COL_ID_MULT,    e.getIdMultiplicador());
-        map.put(COL_ID_MULTRES, e.getIdMultiplicadorReserva());
-        map.put(COL_DATA_INI,   e.getDataInicio());
-        map.put(COL_DATA_FIM,   e.getDataFim());
-        map.put(COL_STATUS,     e.getStatus());
+        map.put(COL_ID_TURMA, e.getIdTurma());
+        map.put(COL_TURNO,    e.getTurno());
+        map.put(COL_ID_MULT,  e.getIdMultiplicador());
+        map.put(COL_DATA_INI, e.getDataInicio());
+        map.put(COL_DATA_FIM, e.getDataFim());
+        map.put(COL_STATUS,   e.getStatus());
+        map.put(COL_TIPO,     (e.getTipo() == null ? TrainingType.ONBOARDING : e.getTipo()).name());
         return map;
-    }
-
-
-    /** Atualiza/define o multiplicador reserva (coluna D). */
-    @Override
-    public void setMultiplicadorReserva(String idTurma, String idMultiplicadorReserva) throws IOException {
-        int rowIndex = findRowIndexByColumn(sheetName(), COL_ID_TURMA, idTurma);
-        if (rowIndex == -1) throw new IllegalArgumentException("Turma não encontrada: " + idTurma);
-        updateCell(rowIndex, COL_ID_MULTRES, Optional.ofNullable(idMultiplicadorReserva).orElse(""));
     }
 
     /* ======= CRUD ======= */
@@ -101,7 +106,7 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
     @Override
     public Onboarding save(Onboarding entity) throws IOException {
         List<Object> row = toRow(entity);
-        appendRowUserEntered(row, "G");
+        appendRowUserEntered(row, "G"); // última coluna agora é G
         return entity;
     }
 
@@ -117,21 +122,21 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
     public void deleteById(String id) throws IOException {
         int rowIndex = findRowIndexByColumn(sheetName(), COL_ID_TURMA, id);
         if (rowIndex != -1) {
-            updateCell(rowIndex, COL_STATUS, "Concluído"); // ou "Cancelada", se preferir
+            updateCell(rowIndex, COL_STATUS, "Concluído"); // ou "Cancelada"
         }
     }
 
-    /* ======= createTurma (public, casa com a interface) ======= */
     @Override
-    public Onboarding createTurma(String IdMultiplicador, String IdMultiplicadorReserva, LocalDate dataFinal) throws IOException {
-        // valida Data_Início ≥ hoje (dataFinal aqui é a data de INÍCIO)
+    public Onboarding createTurma(String idMultiplicador,
+                                  LocalDate dataInicio,
+                                  TrainingType tipo) throws IOException {
         LocalDate hoje = LocalDate.now();
-        if (dataFinal.isBefore(hoje)) dataFinal = hoje;
+        if (dataInicio.isBefore(hoje)) dataInicio = hoje;
 
         String idTurma = generateTurmaId();
-        String dataInicioBr = dataFinal.format(BR);
+        String dataInicioBr = dataInicio.format(BR);
 
-        // B: Turno buscado do MCG pelo ID do multiplicador (C)
+        // B (Turno) depende do ID_Multiplicador (C) — mantido
         String fTurno =
                 "=SEERRO(" +
                         "  ÍNDICE(Multiplicadores_Controle_Geral!$B:$B;" +
@@ -139,38 +144,37 @@ public class OnboardingRepositoryImpl extends GenericRepository<Onboarding> impl
                         "  ); \"\"" +
                         ")";
 
-        // F: Data_Fim = E + 5
-        String fDataFim =
-                "=SE(ÍNDICE($E:$E; LIN())=\"\"; \"\"; ÍNDICE($E:$E; LIN()) + 5)";
+        // **Atenção às colunas novas**:
+        // D: Data_Início  |  E: Data_Fim  |  F: Status
+        String fDataFim = "=SE(ÍNDICE($D:$D; LIN())=\"\"; \"\"; ÍNDICE($D:$D; LIN()) + 5)";
 
-        // G: Status (até data fim → Em andamento; depois → Concluído)
         String fStatus =
                 "=SE(" +
-                        "  ÍNDICE($E:$E; LIN())=\"\";" +
+                        "  ÍNDICE($D:$D; LIN())=\"\";" +                  // sem data de início → vazio
                         "  \"\";" +
-                        "  SE(ÍNDICE($F:$F; LIN()) < HOJE(); \"Concluído\"; \"Em andamento\")" +
+                        "  SE(ÍNDICE($E:$E; LIN()) < HOJE(); \"Concluído\"; \"Em andamento\")" +
                         ")";
 
         Map<String, Object> rowMap = new LinkedHashMap<>();
-        rowMap.put(COL_ID_TURMA,   idTurma);
-        rowMap.put(COL_TURNO,      fTurno); // fórmula
-        rowMap.put(COL_ID_MULT,    IdMultiplicador);
-        rowMap.put(COL_ID_MULTRES, Optional.ofNullable(IdMultiplicadorReserva).orElse(""));
-        rowMap.put(COL_DATA_INI,   dataInicioBr);
-        rowMap.put(COL_DATA_FIM,   fDataFim); // fórmula
-        rowMap.put(COL_STATUS,     fStatus);  // fórmula
+        rowMap.put(COL_ID_TURMA, idTurma);
+        rowMap.put(COL_TURNO,    fTurno);                  // fórmula
+        rowMap.put(COL_ID_MULT,  idMultiplicador);
+        rowMap.put(COL_DATA_INI, dataInicioBr);
+        rowMap.put(COL_DATA_FIM, fDataFim);                // fórmula
+        rowMap.put(COL_STATUS,   fStatus);                 // fórmula
+        rowMap.put(COL_TIPO,     (tipo == null ? TrainingType.ONBOARDING : tipo).name());
 
         List<Object> row = buildRowFromMap(sheetName(), rowMap);
         appendRowUserEntered(row, "G");
 
         Onboarding o = new Onboarding();
         o.setIdTurma(idTurma);
-        o.setIdMultiplicador(IdMultiplicador);
-        o.setIdMultiplicadorReserva(Optional.ofNullable(IdMultiplicadorReserva).orElse(""));
-        o.setTurno("");        // calculado pela planilha
+        o.setIdMultiplicador(idMultiplicador);
+        o.setTurno("");            // calculado
         o.setDataInicio(dataInicioBr);
-        o.setDataFim("");      // calculado
-        o.setStatus("");       // calculado
+        o.setDataFim("");          // calculado
+        o.setStatus("");           // calculado
+        o.setTipo(tipo == null ? TrainingType.ONBOARDING : tipo);
         return o;
     }
 

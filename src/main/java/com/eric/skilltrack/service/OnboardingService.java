@@ -1,6 +1,7 @@
 package com.eric.skilltrack.service;
 
 import com.eric.skilltrack.model.Onboarding;
+import com.eric.skilltrack.model.enums.TrainingType;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -15,9 +16,7 @@ public interface OnboardingService {
     void deleteById(String id) throws IOException;
 
     Onboarding createTurma(String idMultiplicador,
-                           String idMultiplicadorReserva,
-                           LocalDate dataInicio) throws IOException;
+                           LocalDate dataInicio,
+                           TrainingType tipo) throws IOException;
 
-    void setMultiplicadorReserva(String idTurma,
-                                 String idMultiplicadorReserva) throws IOException;
 }

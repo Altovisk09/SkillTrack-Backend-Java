@@ -1,6 +1,7 @@
 package com.eric.skilltrack.repository;
 
 import com.eric.skilltrack.model.Onboarding;
+import com.eric.skilltrack.model.enums.TrainingType;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -26,9 +27,7 @@ public interface OnboardingRepository extends BaseRepository<Onboarding, String>
     @Override
     int findRowIndexByColumn(String sheetName, String columnName, String value) throws IOException;
 
-    Onboarding createTurma(String IdMultiplicador,
-                           String IdMultiplicadorReserva,
-                           LocalDate dataFinal) throws IOException;
-
-    void setMultiplicadorReserva(String idTurma, String idMultiplicadorReserva) throws IOException;
+    Onboarding createTurma(String idMultiplicador,
+                           LocalDate dataInicio,
+                           TrainingType tipo) throws IOException;
 }

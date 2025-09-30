@@ -29,6 +29,8 @@ public abstract class GenericRepository<T> implements BaseRepository<T, String> 
     /** Converte uma linha em um objeto T. */
     protected abstract T fromRow(List<Object> row);
 
+    protected abstract String getSheetName();
+
     /** Converte um objeto T em lista de colunas. */
     protected abstract List<Object> toRow(T entity);
 

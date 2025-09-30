@@ -81,6 +81,11 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
         return u;
     }
 
+    @Override
+    protected String getSheetName() {
+        return SHEET_NAME;
+    }
+
     /**
      * Converte um User para uma linha da planilha
      */
@@ -236,5 +241,10 @@ public class UserRepositoryImpl extends GenericRepository<User> implements UserR
                 }
             });
         }
+    }
+
+    @Override
+    public List<User> saveAll(List<User> entities) throws IOException {
+        return List.of();
     }
 }

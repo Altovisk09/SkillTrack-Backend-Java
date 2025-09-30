@@ -18,4 +18,6 @@ public interface UserRepository extends BaseRepository<User, String> {
 
     // Se for usar HC (Human Capital), mantemos esse metodo
     void syncFromHc(HcRepository hcRepository) throws IOException;
+
+    List<User> saveAll(List<User> entities) throws IOException;
 }
