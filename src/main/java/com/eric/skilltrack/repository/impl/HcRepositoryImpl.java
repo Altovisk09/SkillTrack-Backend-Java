@@ -69,6 +69,11 @@ public class HcRepositoryImpl extends GenericRepository<HC> implements HcReposit
     }
 
     @Override
+    protected String getSheetName() {
+        return SHEET_NAME;
+    }
+
+    @Override
     protected List<Object> toRow(HC entity) {
         throw new UnsupportedOperationException("HC repository is read-only");
     }

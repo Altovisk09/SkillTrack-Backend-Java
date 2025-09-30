@@ -66,6 +66,11 @@ public class McgRepositoryImpl extends GenericRepository<GeneralControlMultiplie
     }
 
     @Override
+    protected String getSheetName() {
+        return SHEET_NAME;
+    }
+
+    @Override
     protected List<Object> toRow(GeneralControlMultipliers e) {
         return Arrays.asList(
                 e.getIdMultiplicador(),
