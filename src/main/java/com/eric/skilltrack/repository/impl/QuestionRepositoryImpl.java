@@ -155,4 +155,28 @@ public class QuestionRepositoryImpl extends GenericRepository<Question> implemen
         save(q);
         return q;
     }
+
+    @Override
+    public List<Question> getQuestionsByIds(List<String> ids) throws IOException {
+        List<Question> allQuestions = findAll(); // ou cache
+        List<Question> result = new ArrayList<>();
+        for (String id : ids) {
+            allQuestions.stream()
+                    .filter(q -> q.getIdPergunta().equals(id))
+                    .findFirst()
+                    .ifPresent(result::add);
+        }
+        return result;
+    }
+
+    @Override
+    public List<Question> getQuestionsFromCsvIds(String csvIds) throws IOException {
+        if (csvIds == null || csvIds.isBlank()) return Collections.emptyList();
+
+        List<String> ids = Arrays.stream(csvIds.split(","))
+                .map(String::trim)
+                .toList();
+
+        return getQuestionsByIds(ids);
+    }
 }

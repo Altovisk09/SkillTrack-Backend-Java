@@ -37,4 +37,9 @@ public interface QuestionRepository extends BaseRepository<Question, String> {
                             String categoria,
                             String foco,
                             String linkImagem) throws IOException;
+
+    List<Question> getQuestionsByIds(List<String> ids) throws IOException;
+
+    List<Question> getQuestionsFromCsvIds(String csvIds) throws IOException;
 }
+
