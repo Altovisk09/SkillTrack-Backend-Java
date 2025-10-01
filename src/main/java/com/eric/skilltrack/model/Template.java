@@ -1,5 +1,6 @@
 package com.eric.skilltrack.model;
 
+import com.eric.skilltrack.model.enums.TrainingType;
 import lombok.Data;
 import java.util.List;
 
@@ -8,8 +9,8 @@ public class Template {
     private String idTemplate;
     private String nomeTreinamento;
     private String categoria;
-    private List<String> idsPerguntas;
+    private String idsPerguntas;
     private String setorFoco;
     private String autor;
-    private String tipo;
+    private TrainingType tipo;
 }

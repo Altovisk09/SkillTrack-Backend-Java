@@ -1,7 +1,7 @@
 package com.eric.skilltrack.repository;
 
 import com.google.api.services.sheets.v4.Sheets;
-import com.google.api.services.sheets.v4.model.ValueRange;
+import com.google.api.services.sheets.v4.model.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -206,5 +206,27 @@ public abstract class GenericRepository<T> implements BaseRepository<T, String> 
         }
         return row;
     }
+    protected void deleteRow(int rowIndex) throws IOException {
+        Integer sheetId = getSheetId(getSheetName());
+        if (sheetId == null) throw new IllegalArgumentException("Sheet não encontrada: " + getSheetName());
 
+        DeleteDimensionRequest deleteRequest = new DeleteDimensionRequest()
+                .setRange(new DimensionRange()
+                        .setSheetId(sheetId)
+                        .setDimension("ROWS")
+                        .setStartIndex(rowIndex - 1) // zero-based
+                        .setEndIndex(rowIndex)
+                );
+
+        Request request = new Request().setDeleteDimension(deleteRequest);
+        BatchUpdateSpreadsheetRequest body = new BatchUpdateSpreadsheetRequest().setRequests(Collections.singletonList(request));
+        sheetsService.spreadsheets().batchUpdate(spreadsheetId, body).execute();
+    }
+    protected Integer getSheetId(String sheetName) throws IOException {
+        return sheetsService.spreadsheets().get(spreadsheetId).execute().getSheets().stream()
+                .filter(s -> s.getProperties().getTitle().equals(sheetName))
+                .map(s -> s.getProperties().getSheetId())
+                .findFirst()
+                .orElse(null);
+    }
 }
